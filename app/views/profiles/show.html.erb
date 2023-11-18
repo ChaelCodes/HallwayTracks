@@ -2,7 +2,9 @@
   <div class="block">
     <h1 class="title"><%= @profile.name %></h1>
     <h2 class="subtitle"><%= "@#{@profile.handle}" %></h2>
-    <%= friendship_button(@profile) %>
+    <% if @profile != current_user.profile %>
+      <%= friendship_button(@profile) %>
+    <% end %>
   </div>
   <div class="block">
     <p><%= @profile.bio %></p>
