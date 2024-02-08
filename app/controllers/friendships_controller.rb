@@ -44,6 +44,18 @@ class FriendshipsController < ApplicationController
   # PATCH/PUT /friendships/1 or /friendships/1.json
   def update
     respond_to do |format|
+      if Friendship.where(buddy_id: current_user.id, status: :accepted).length == 0
+        if @friendship.update(friendship_params)
+          format.html do
+            redirect_to @friendship, notice: "It's dangerous to go alone, take this Friend."
+          end
+          format.json { render :show, status: :ok, location: @friendship }
+        else
+          format.html { render :edit, status: :unprocessable_entity }
+          format.json { render json: @friendship.errors, status: :unprocessable_entity }
+        end
+      end
+
       if @friendship.update(friendship_params)
         format.html { redirect_to @friendship, notice: "Friendship was successfully updated." } # friend made = buddy up
         format.json { render :show, status: :ok, location: @friendship }

@@ -148,6 +148,13 @@ RSpec.describe "/friendships" do
             patch_update
             friendship.reload
             expect(friendship.status).to eq("accepted")
+            
+            # When you accept your first friendship, send a custom message. "It's dangerous to go alone, take this Friend."
+            if Friendship.where(buddy_id: user.id, status: :accepted).length == 0
+              expect(flash[:notice]).to match(/It's dangerous to go alone, take this Friend.*/)
+            else
+              expect(flash[:notice]).to match(/Friendship was successfully updated.*/)
+            end
           end
 
           it "redirects to the friendship" do
