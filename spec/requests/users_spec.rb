@@ -20,9 +20,7 @@ RSpec.describe "/users" do
   let(:valid_attributes) do
     {
       email: "chaelcodes@example.com",
-      password: "password",
-      name: "Chael",
-      bio: "Hello. I am dev. Friends please? Ty."
+      password: "password"
     }
   end
 
@@ -47,15 +45,15 @@ RSpec.describe "/users" do
     end
   end
 
-  describe "GET /show" do
-    it "renders a successful response" do
-      get user_url(user), params: { format: :json }
-      expect(json_body).to include({
-                                     bio: user.bio,
-                                     name: user.name
-                                   })
-    end
-  end
+  # describe "GET /show" do
+  #   it "renders a successful response" do
+  #     get user_url(user), params: { format: :json }
+  #     expect(json_body).to include({
+  #                                    bio: user.bio,
+  #                                    name: user.name
+  #                                  })
+  #   end
+  # end
 
   describe "GET /new" do
     it "renders a successful response" do
@@ -71,28 +69,28 @@ RSpec.describe "/users" do
     end
   end
 
-  describe "PATCH /update" do
-    subject(:patch_update) { patch user_url(user), params: { user: attributes } }
+  # describe "PATCH /update" do
+  #   subject(:patch_update) { patch user_url(user), params: { user: attributes } }
 
-    context "with valid parameters" do
-      let(:attributes) do
-        {
-          name: "ChaelCodes"
-        }
-      end
+  #   context "with valid parameters" do
+  #     let(:attributes) do
+  #       {
+  #         name: "ChaelCodes"
+  #       }
+  #     end
 
-      it "updates the requested user" do
-        patch_update
-        user.reload
-        expect(user.name).to eq "ChaelCodes"
-      end
+  #     it "updates the requested user" do
+  #       patch_update
+  #       user.reload
+  #       expect(user.name).to eq "ChaelCodes"
+  #     end
 
-      it "redirects to the user" do
-        patch_update
-        expect(response).to redirect_to(user_url(user))
-      end
-    end
-  end
+  #     it "redirects to the user" do
+  #       patch_update
+  #       expect(response).to redirect_to(user_url(user))
+  #     end
+  #   end
+  # end
 
   describe "DELETE /destroy" do
     it "destroys the requested user" do

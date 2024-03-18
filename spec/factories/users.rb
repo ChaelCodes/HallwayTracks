@@ -2,9 +2,7 @@
 
 FactoryBot.define do
   factory :user do
-    bio { "Hello. I am dev. Friends please? Ty." }
     sequence(:email) { |i| "buddy#{i}@example.com" }
-    name { "Chael" }
     password { "P@55w0rd" }
     confirmed_at { 1.day.ago }
 

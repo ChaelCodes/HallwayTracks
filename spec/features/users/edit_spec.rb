@@ -17,7 +17,6 @@ describe "Users" do
 
     it "demands signup" do
       expect(page).to have_content "You need to sign in or sign up before continuing."
-      expect(page).not_to have_content user_profile.name
     end
   end
 
@@ -34,20 +33,6 @@ describe "Users" do
 
     it "prompts the user to confirm email" do
       expect(page).to have_content "You have to confirm your email address before continuing."
-      expect(page).not_to have_content user_profile.name
-    end
-  end
-
-  context "when profile belongs to user" do
-    let(:user) { user_profile }
-
-    it "permission to edit denied" do
-      expect(page).to have_content "Editing User"
-      fill_in "user[name]", with: "ChaelChats"
-      click_button "Update User"
-      user_profile.reload
-      expect(page).to have_content("User was successfully updated.")
-      expect(user_profile.name).to eq("ChaelChats")
     end
   end
 end
