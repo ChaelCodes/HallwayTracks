@@ -9,11 +9,9 @@ class FriendshipsController < ApplicationController
   # GET /friendships or /friendships.json
   def index
     return unless current_user.profile
-    @profile = current_user.profile
-    @friendships = Friendship.where(friend_id: @profile.id, status: :accepted)
-                             .or(Friendship.where(
-                                   buddy_id: @profile.id, status: :accepted
-                                 ))
+    @profile = current_profile
+    @friend_requests = @profile.friend_requests
+    @friendships = Friendship.where(buddy_id: @profile.id, status: :accepted)
   end
 
   # GET /friendships/1 or /friendships/1.json

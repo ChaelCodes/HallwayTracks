@@ -38,24 +38,23 @@ RSpec.describe Profile do
   describe "#friends" do
     subject { profile.friends }
 
+    let(:friend) { create :profile }
+
     it { is_expected.to be_empty }
 
     context "when profile has friends" do
-      let(:friend) { create :profile }
       let!(:friendship) { Friendship.create(friend:, buddy: profile, status: :accepted) }
 
       it { is_expected.to include(friend) }
     end
 
-    context "when profile has buddies" do
-      let(:buddy) { create :profile }
-      let!(:friendship) { Friendship.create(friend: profile, buddy:, status: :accepted) }
+    context "when the profile has blocked a 'friend'" do
+      let!(:friendship) { Friendship.create(friend:, buddy: profile, status: :blocked) }
 
-      it { is_expected.to include(buddy) }
+      it { is_expected.not_to include(friend) }
     end
 
-    context "when profile has requested friends" do
-      let(:friend) { create :profile }
+    context "when profile has requested a friend" do
       let!(:friendship) { Friendship.create(friend:, buddy: profile, status: :requested) }
 
       it "does not include friend requests" do
@@ -64,10 +63,11 @@ RSpec.describe Profile do
     end
 
     context "when profile has pending friend requests" do
-      let(:buddy) { create :profile }
-      let!(:friendship2) { Friendship.create(friend: profile, buddy:, status: :requested) }
+      let!(:friendship2) { Friendship.create(friend:, buddy: profile, status: :requested) }
 
-      it { is_expected.not_to include(buddy) }
+      it "does not include friend requests" do
+        is_expected.not_to include(friend)
+      end
     end
   end
 

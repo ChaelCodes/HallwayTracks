@@ -10,7 +10,7 @@ class EventAttendeePolicy < ApplicationPolicy
   end
 
   def show?
-    true
+    ProfilePolicy.new(user, @profile).show_details?
   end
 
   def index?
@@ -26,7 +26,7 @@ class EventAttendeePolicy < ApplicationPolicy
   end
 
   def update?
-    record.organizer
+    false
   end
 
   def destroy?
@@ -36,7 +36,7 @@ class EventAttendeePolicy < ApplicationPolicy
   # Rules governing a list of Events
   class Scope < Scope
     def resolve
-      scope.all
+      scope.where(profile: ProfilePolicy::Scope.new(user, Profile).resolve)
     end
   end
 end

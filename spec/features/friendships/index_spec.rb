@@ -27,7 +27,8 @@ describe "Friendships" do
 
       it "shows the user's friends" do
         expect(page).to have_link friendship.friend.name, href: profile_path(friendship.friend)
-        expect(page).to have_link "✨Friends✨", href: friendship_path(friendship)
+        expect(page).to have_link "#{friendship.buddy.name} feels friendly towards #{friendship.friend.name}!",
+                                  href: friendship_path(friendship)
       end
 
       context "with blocked friendships" do
@@ -42,22 +43,22 @@ describe "Friendships" do
       end
 
       context "with a friend request" do
-        let(:friendship) { create :friendship, friend: profile, status: "requested" }
+        let(:friendship) { create :friendship, buddy: profile, status: "requested" }
 
         it "accepts the friend request" do
           expect(page).to have_content "You have Friend Requests!"
           within ".friend-requests" do
-            expect(page).to have_link friendship.buddy.name, href: profile_path(friendship.buddy)
-            click_button("Be my buddy?")
+            expect(page).to have_link friendship.friend.name, href: profile_path(friendship.friend)
+            click_button("Accept friend request")
           end
           friendship.reload
-          expect(friendship.status).to eq "accepted"
+          expect(friendship).to be_accepted
         end
 
         it "ignores the friend request" do
           expect(page).to have_content "You have Friend Requests!"
           within ".friend-requests" do
-            expect(page).to have_link friendship.buddy.name, href: profile_path(friendship.buddy)
+            expect(page).to have_link friendship.friend.name, href: profile_path(friendship.friend)
             click_button("Ignore")
           end
           expect { friendship.reload }.to raise_error(ActiveRecord::RecordNotFound)

@@ -3,13 +3,17 @@
     <%= link_to @friendship %>
 
     <p>
+      <strong>Friend:</strong>
+      <%= link_to @friendship.friend %>
+    </p>
+
+    <p>
       <strong>Status:</strong>
       <%= @friendship.status %>
     </p>
   </div>
-  <div class="buttons">
-    <%= be_my_buddy_button(@friendship) %>
-    <%= destroy_friendship_button(@friendship) %>
-    <%= block_button(@friendship) %>
+
+  <div class="field is-grouped-multiline has-addons">
+    <%= friendship_button(@friendship, current_user&.profile) %>
   </div>
 </div>

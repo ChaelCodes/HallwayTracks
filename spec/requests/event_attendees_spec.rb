@@ -24,7 +24,7 @@ RSpec.describe "/event_attendees" do
   end
 
   describe "GET /index" do
-    subject(:get_index) { get event_attendees_url }
+    subject(:get_index) { get event_attendees_url, params: { format: :json } }
 
     context "when user is logged in" do
       let!(:event_attendee) { create_list :event_attendee, 2, organizer: true }
@@ -32,12 +32,12 @@ RSpec.describe "/event_attendees" do
 
       it "renders a successful response" do
         get_index
-        expect(response.body).to include(event_attendee[0].profile_id.to_s)
+        expect(json_body.pluck("profile_id")).to include(event_attendee[0].profile_id)
       end
 
       it "don't render other users records" do
         get_index
-        expect(response.body).not_to include(event_attendee[1].profile_id.to_s)
+        expect(json_body.pluck("profile_id")).not_to include(event_attendee[1].profile_id)
       end
     end
   end
@@ -45,9 +45,17 @@ RSpec.describe "/event_attendees" do
   describe "GET /show" do
     subject(:get_show) { get event_attendee_url(event_attendee) }
 
-    it "renders a successful response" do
-      get_show
-      expect(response).to be_successful
+    include_examples "unauthorized access"
+
+    context "with your event attendee" do
+      let(:user) { create :user }
+      let(:profile) { create :profile, user: }
+      let(:event_attendee) { create :event_attendee, profile: }
+
+      it "renders a successful response" do
+        get_show
+        expect(response).to be_successful
+      end
     end
   end
 
@@ -70,23 +78,6 @@ RSpec.describe "/event_attendees" do
     subject(:get_edit) { get edit_event_attendee_url(event_attendee) }
 
     include_examples "redirect to sign in"
-
-    context "when user is not an organizer" do
-      let(:user) { create :user }
-      let(:event_attendee) { create :event_attendee, organizer: false }
-
-      include_examples "unauthorized access"
-    end
-
-    context "when user is an organizer" do
-      let(:user) { create :user }
-      let(:event_attendee) { create :event_attendee, organizer: true }
-
-      it "render a successful response" do
-        get_edit
-        expect(response).to be_successful
-      end
-    end
   end
 
   describe "POST /create" do
@@ -176,38 +167,6 @@ RSpec.describe "/event_attendees" do
         let(:user) { create :user }
 
         include_examples "unauthorized access"
-      end
-
-      context "when user matches profile" do
-        let(:user) { event_attendee.profile.user }
-        let(:event_attendee) { create :event_attendee, organizer: true }
-
-        it "updates the requested event_attendee" do
-          patch_update
-          event_attendee.reload
-          expect(event_attendee.event.name).to eq "StrangeLoop"
-        end
-
-        it "redirects to the event_attendee" do
-          patch_update
-          expect(response).to redirect_to(event_attendee_url(event_attendee))
-        end
-      end
-    end
-
-    context "with invalid parameters and valid user" do
-      let(:attributes) { { event_id: nil } }
-      let(:user) { event_attendee.profile.user }
-      let(:event_attendee) { create :event_attendee, organizer: true }
-
-      it "returns an unprocessable entity code" do
-        patch_update
-        expect(response).to have_http_status(:unprocessable_entity)
-      end
-
-      it "updates the event name" do
-        patch_update
-        expect(event_attendee.reload.event.name).to eq "RubyConf"
       end
     end
   end

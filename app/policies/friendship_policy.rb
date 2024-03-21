@@ -14,11 +14,15 @@ class FriendshipPolicy < ApplicationPolicy
   end
 
   def show?
-    true
+    return true if my_friendship?
+    @friendship.friend == current_profile && !@friendship.blocked?
   end
 
   def create?
-    true
+    return true if missing_params # hit the validations instead of the authorizations
+    return (@friendship.blocked? || @friendship.accepted?) if @friendship.buddy == @current_profile
+    return @friendship.requested? if @friendship.friend == @current_profile
+    false
   end
 
   def edit?
@@ -30,23 +34,19 @@ class FriendshipPolicy < ApplicationPolicy
   end
 
   def update?
-    return false unless user
-    return false if friendship.blocked?
-    user.profile == friendship.buddy || user.profile == friendship.friend
+    my_friendship?
   end
 
   def destroy?
     user.admin? || update?
   end
 
-  # Buddy is the person who requested the friendship
-  # Only the friend can accept the friendship
-  def accept?
-    user.profile == friendship.friend
+  def missing_params
+    @friendship&.buddy.nil? || @friendship&.friend.nil? || @friendship&.status.nil?
   end
 
-  def block?
-    update?
+  def my_friendship?
+    @current_profile == @friendship.buddy
   end
 
   # Permissions and access for a collection of Users
@@ -58,6 +58,7 @@ class FriendshipPolicy < ApplicationPolicy
       @scope = scope
     end
 
+    # TODO: Limit visibility of Friendships to yours
     def resolve
       scope.all
     end

@@ -15,7 +15,7 @@ RSpec.describe "/profiles" do
 
   # rubocop:disable RSpec/MultipleExpectations
   describe "GET /index" do
-    subject(:get_index) { get profiles_url }
+    subject(:get_index) { get profiles_url, params: { format: :json } }
 
     let!(:everyone_profile) { create :profile, visibility: :everyone }
     let!(:authenticated_profile) { create :profile, visibility: :authenticated }
@@ -23,17 +23,18 @@ RSpec.describe "/profiles" do
     let!(:friends_profile) { create :profile, visibility: :friends }
     let!(:myself_profile) { create :profile, visibility: :myself }
     let!(:current_profile) { create :profile, user:, visibility: :myself }
-    let!(:friendship) { create :friendship, buddy: current_profile, friend: friends_profile, status: :accepted }
+    let!(:friendship) { create :friendship, buddy: friends_profile, friend: current_profile, status: :accepted }
 
     context "when the profile belongs to a confirmed user" do
       it "renders a successful response" do
         get_index
-        expect(response.body).to include(everyone_profile.handle)
-        expect(response.body).to include(authenticated_profile.handle)
-        expect(response.body).not_to include(not_friends_profile.handle)
-        expect(response.body).not_to include(myself_profile.handle)
-        expect(response.body).to include(friends_profile.handle)
-        expect(response.body).to include(current_profile.handle)
+        handles = json_body.pluck("handle")
+        expect(handles).to include(everyone_profile.handle)
+        expect(handles).to include(authenticated_profile.handle)
+        expect(handles).not_to include(not_friends_profile.handle)
+        expect(handles).not_to include(myself_profile.handle)
+        expect(handles).to include(friends_profile.handle)
+        expect(handles).to include(current_profile.handle)
       end
     end
 
@@ -42,16 +43,19 @@ RSpec.describe "/profiles" do
 
       it "shows only public profiles" do
         get_index
-        expect(response.body).to include(everyone_profile.handle)
-        expect(response.body).not_to include(authenticated_profile.handle)
-        expect(response.body).not_to include(not_friends_profile.handle)
-        expect(response.body).not_to include(myself_profile.handle)
-        expect(response.body).to include(friends_profile.handle)
-        expect(response.body).to include(current_profile.handle)
+        handles = json_body.pluck("handle")
+        expect(handles).to include(everyone_profile.handle)
+        expect(handles).not_to include(authenticated_profile.handle)
+        expect(handles).not_to include(not_friends_profile.handle)
+        expect(handles).not_to include(myself_profile.handle)
+        expect(handles).to include(friends_profile.handle)
+        expect(handles).to include(current_profile.handle)
       end
     end
 
     context "when the profile belongs to an overdue unconfirmed user" do
+      subject(:get_index) { get profiles_url, params: { format: :html } }
+
       let(:user) { create :user, :overdue_unconfirmed }
 
       it_behaves_like "confirm your email"

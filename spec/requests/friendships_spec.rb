@@ -46,6 +46,12 @@ RSpec.describe "/friendships" do
     context "when user is signed in" do
       let(:user) { create :user }
 
+      include_examples "unauthorized access"
+    end
+
+    context "when the user is a friend" do
+      let(:user) { friendship.friend.user }
+
       it "renders a successful response" do
         get_show
         expect(response).to be_successful
@@ -93,12 +99,12 @@ RSpec.describe "/friendships" do
     subject(:post_create) { post friendships_url, params: { friendship: attributes } }
 
     context "with valid parameters" do
-      let(:attributes) { attributes_for :friendship, buddy_id: buddy.id, friend_id: friend.id }
+      let(:attributes) { { buddy_id: buddy.id, friend_id: friend.id, status: "accepted" } }
 
       include_examples "redirect to sign in"
 
       context "with logged in user" do
-        let(:user) { create :user }
+        let(:user) { buddy.user }
 
         it "creates a new Friendship" do
           expect { post_create }.to change(Friendship, :count).by(1)
@@ -113,7 +119,7 @@ RSpec.describe "/friendships" do
 
     context "with invalid parameters" do
       let(:attributes) { attributes_for :friendship, friend_id: nil }
-      let(:user) { create :user }
+      let(:user) { buddy.user }
 
       it "does not create a new Friendship" do
         expect { post_create }.not_to change(Friendship, :count)
@@ -132,7 +138,7 @@ RSpec.describe "/friendships" do
     before(:each) { friendship }
 
     context "with valid parameters" do
-      let(:attributes) { attributes_for :friendship, status: :accepted }
+      let(:attributes) { { status: "accepted" } }
 
       include_examples "redirect to sign in"
 
@@ -159,16 +165,7 @@ RSpec.describe "/friendships" do
         context "with friend" do
           let(:user) { friend.user }
 
-          it "updates the requested friendship" do
-            patch_update
-            friendship.reload
-            expect(friendship.status).to eq("accepted")
-          end
-
-          it "redirects to the friendship" do
-            patch_update
-            expect(response).to redirect_to(friendship_url(friendship))
-          end
+          include_examples "unauthorized access"
         end
       end
     end

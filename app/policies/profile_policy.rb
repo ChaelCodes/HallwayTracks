@@ -30,7 +30,7 @@ class ProfilePolicy < ApplicationPolicy
   def show_details?
     return true if mine? || admin? || profile.visible_to_everyone?
     return confirmed_user? if profile.visible_to_authenticated?
-    current_profile&.friends_with? profile if profile.visible_to_friends?
+    profile.friends_with? current_profile if profile.visible_to_friends?
   end
 
   def create?
@@ -59,9 +59,8 @@ class ProfilePolicy < ApplicationPolicy
     end
 
     def resolve
-      return scope.all if user&.admin?
-      access_collection = scope.where(visibility: public_access_list)
-      include_friends_and_self(scope, access_collection, current_profile)
+      collection = current_profile ? except_people_who_dont_like_you : scope
+      respecting_profile_visibility(collection)
     end
 
     private
@@ -70,10 +69,16 @@ class ProfilePolicy < ApplicationPolicy
       user&.confirmed? ? AUTHENTICATED_ACCESS : UNAUTHENTICATED_ACCESS
     end
 
-    def include_friends_and_self(scope, collection, profile)
-      return collection unless profile
-      collection.or(scope.where(id: current_profile.friends.visible_to_friends))
-                .or(scope.where(id: current_profile.id))
+    def except_people_who_dont_like_you
+      scope.where.not(id: Friendship.blocks(current_profile).select(:buddy_id))
+    end
+
+    def respecting_profile_visibility(collection)
+      profiles = collection.where(visibility: public_access_list)
+      return profiles unless current_profile
+      profiles.or(collection.where(id: Friendship.friends_of(current_profile).select(:buddy_id),
+                                   visibility: :friends))
+              .or(collection.where(id: current_profile.id))
     end
   end
 end

@@ -1,15 +1,15 @@
 <div class="container">
   <h1 class="title">Friendships</h1>
   <% if @profile.present? %>
-    <% if @profile.friend_requests.present? %>
+    <% if @friend_requests.present? %>
       <h2>You have Friend Requests!</h2>
       <table class="table friend-requests">
-        <% @profile.friend_requests.each do |friendship| %>
+        <% @friend_requests.each do |friendship| %>
           <tr>
-            <td><%= link_to friendship.buddy %></td>
-            <td><%= be_my_buddy_button(friendship) %></td>
-            <td><%= destroy_friendship_button(friendship) %></td>
-            <td><%= block_button(friendship) %></td>
+            <td><%= link_to friendship.friend %></td>
+            <td><%= accept_friendship_button(friendship, current_user&.profile) %></td>
+            <td><%= destroy_friendship_button(friendship, current_user&.profile) %></td>
+            <td><%= block_button(friendship, current_user&.profile) %></td>
           </tr>
         <% end %>
     <% end %>
@@ -27,7 +27,7 @@
       <tbody>
         <% @friendships.each do |friendship| %>
           <tr>
-            <td><%= link_to friendship.not_my_profile(@profile), friendship.not_my_profile(@profile) %></td>
+            <td><%= link_to friendship.friend %></td>
             <td><%= friendship.status %></td>
             <td><%= view_friendship(friendship) %></td>
           </tr>

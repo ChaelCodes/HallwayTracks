@@ -14,6 +14,10 @@ class ProfilesController < ApplicationController
   # GET /profiles/1 or /profiles/1.json
   def show
     @events = @profile.events if policy(@profile).show_details?
+    @your_friendship = Friendship.find_or_initialize_by buddy: current_profile, friend: @profile
+    @your_friendship = nil unless @your_friendship.valid?
+    @their_friendship = Friendship.find_or_initialize_by friend: current_profile, buddy: @profile
+    @their_friendship = nil unless @their_friendship.valid? && policy(@their_friendship).show?
   end
 
   # GET /profiles/new

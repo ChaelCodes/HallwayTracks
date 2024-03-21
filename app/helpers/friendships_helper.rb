@@ -2,58 +2,85 @@
 
 # methods to help with displaying friendship!
 module FriendshipsHelper
-  # Shows a button that displays the most likely friendship option
-  def friendship_button(profile, my_profile = current_user&.profile)
-    return if my_profile.blank?
-    friendship = my_profile.friendship_with(profile)
-    return request_friend(profile, my_profile) unless friendship
-    return view_friendship(friendship) if friendship.accepted?
-    return be_my_buddy_button(friendship) if friendship.requested?
-    "Request Declined" if friendship.blocked?
+  # Show likely Friendship options
+  def friendship_button(friendship, current_profile)
+    return nil unless friendship && current_profile
+    safe_join([
+      accept_friendship_button(friendship, current_profile),
+      befriend_button(friendship, current_profile),
+      destroy_friendship_button(friendship, current_profile),
+      request_friend_button(friendship, current_profile),
+      block_button(friendship, current_profile)
+    ].compact)
   end
 
-  def be_my_buddy_button(friendship)
-    return nil unless friendship.requested? && policy(friendship).accept?
-    button_to "Be my buddy?", friendship_path(friendship, {
-                                                friendship: {
-                                                  status: :accepted
-                                                }
-                                              }), method: :put,
-                                                  class: "button is-primary"
+  # Accept a Friendship Request
+  def accept_friendship_button(friendship, current_profile)
+    return nil unless friendship&.requested? && friendship&.persisted?
+    return nil unless friendship&.buddy == current_profile
+    button_to "Accept friend request", friendship_path(friendship, {
+                                                         friendship: {
+                                                           status: :accepted
+                                                         }
+                                                       }), form_class: "control",
+                                                           method: :put,
+                                                           class: "button is-success is-outlined"
   end
 
-  def block_button(friendship)
-    return nil unless policy(friendship).block?
-    button_to "Block", friendship_path(friendship, { friendship: { status: :blocked } }),
-              method: :put, class: "button is-danger",
-              data: {
-                confirm: "This action is irreversible. The user will not be able to friend you again."
-              }
+  def befriend_button(friendship, current_profile)
+    return nil if friendship.persisted?
+    return nil unless friendship.buddy == current_profile
+    button_to "Befriend",
+              friendships_path(friendship: {
+                                 friend_id: friendship.friend_id,
+                                 buddy_id: friendship.buddy_id,
+                                 status: :accepted
+                               }), form_class: "control",
+                                   method: :post,
+                                   class: "button is-success"
+  end
+
+  # Block a Friendship - Create if no Friendship exists, Update if it does
+  def block_button(friendship, current_profile)
+    return nil if friendship.blocked?
+    return nil unless friendship.buddy == current_profile
+    button_to "Block", friendship,
+              params: { friendship: {
+                status: :blocked,
+                buddy_id: friendship.buddy_id,
+                friend_id: friendship.friend_id
+              } },
+              form_class: "control",
+              class: "button is-danger is-outlined"
   end
 
   # This displays a button to destroy the friendship
-  def destroy_friendship_button(friendship)
-    return nil unless policy(friendship).destroy?
-    text = friendship.accepted? ? "Unfriend" : "Ignore"
-    button_to text, friendship_path(friendship),
-              class: "button is-danger",
-              method: :delete,
-              data: {
-                confirm: "You will need to request friendship again if you change your mind."
-              }
+  def destroy_friendship_button(friendship, current_profile)
+    return unless current_profile == friendship.buddy
+    return unless friendship.persisted?
+    button_names = { "accepted" => "Unfriend", "blocked" => "Unblock", "requested" => "Ignore" }
+    button_to button_names[friendship.status],
+              friendship_path(friendship),
+              form_class: "control",
+              class: "button is-warning is-outlined",
+              method: :delete
   end
 
-  def request_friend(profile, my_profile)
+  # Request the Friendship of another user
+  def request_friend_button(friendship, current_profile)
+    return if friendship.persisted?
+    return unless friendship.friend == current_profile
     button_to "Request Friend",
               friendships_path(friendship: {
-                                 friend_id: profile.id,
-                                 buddy_id: my_profile.id
-                               }),
-              method: :post,
-              class: "button is-primary"
+                                 friend_id: friendship.friend_id,
+                                 buddy_id: friendship.buddy_id,
+                                 status: "requested"
+                               }), method: :post,
+                                   form_class: "control",
+                                   class: "button is-primary is_outlined"
   end
 
   def view_friendship(friendship)
-    link_to "✨Friends✨", friendship_path(friendship)
+    link_to friendship
   end
 end

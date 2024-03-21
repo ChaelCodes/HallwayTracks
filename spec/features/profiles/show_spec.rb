@@ -25,11 +25,12 @@ describe "Profile" do
     end
 
     context "when user has a profile" do
-      let(:profile) { create :profile, user: }
+      let(:current_profile) { create :profile }
+      let(:user) { current_profile.user }
 
       it "allows user to befriend another" do
-        expect(page).to have_button "Request Friend"
-        click_button "Request Friend"
+        expect(page).to have_button "Befriend"
+        click_button "Befriend"
         expect(page).to have_content "Friendship was successfully created."
       end
     end

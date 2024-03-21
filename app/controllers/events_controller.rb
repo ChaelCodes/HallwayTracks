@@ -11,14 +11,16 @@ class EventsController < ApplicationController
     return unless current_profile
     @friends_attending_count = {}
     @events.each do |event|
-      @friends_attending_count[event.id] = EventAttendee.friends_attending(event:, profile: current_profile).count
+      @friends_attending_count[event.id] = policy_scope(
+        EventAttendee.friends_attending(event:, profile: current_profile)
+      ).count
     end
   end
 
   # GET /events/1 or /events/1.json
   def show
     return unless current_profile
-    @event_attendees = EventAttendee.friends_attending(event: @event, profile: current_profile)
+    @event_attendees = policy_scope(EventAttendee.friends_attending(event: @event, profile: current_profile))
   end
 
   # GET /events/new

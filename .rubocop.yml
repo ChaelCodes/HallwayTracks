@@ -69,6 +69,7 @@ RSpec/MultipleExpectations:
 RSpec/MultipleMemoizedHelpers:
   Exclude:
     - "spec/features/**/*"
+    - "spec/policies/**/*"
     - "spec/requests/**/*"
 
 RSpec/NamedSubject:

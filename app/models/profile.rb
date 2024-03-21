@@ -25,8 +25,9 @@ class Profile < ApplicationRecord
   # Friendship has a buddy_id and a friend_id (These are both profiles)
   # We want friends to contain all of the profiles that are friends with the current profile
   # Whether they are "buddy" or "friend"
-  has_many :buddyships, class_name: "Friendship", foreign_key: "buddy_id", dependent: :destroy, inverse_of: :buddy
-  has_many :friendships, class_name: "Friendship", foreign_key: "friend_id", dependent: :destroy, inverse_of: :friend
+  has_many :friendships, class_name: "Friendship", foreign_key: "buddy_id", dependent: :destroy, inverse_of: :buddy
+  # TODO: DELETE buddyships
+  has_many :buddyships, class_name: "Friendship", foreign_key: "friend_id", dependent: :destroy, inverse_of: :friend
 
   def to_s
     name
@@ -40,20 +41,22 @@ class Profile < ApplicationRecord
     event_attendees.where(event:)
   end
 
+  # Profiles who are considered friends by this profile
   def friends
-    Profile.where(id: friendships.select(:buddy_id).accepted)
-           .or(Profile.where(id: buddyships.select(:friend_id).accepted))
+    Profile.where(id: friendships.accepted.select(:friend_id))
   end
 
   def friends_with?(profile)
     friends.include?(profile)
   end
 
+  # TODO: Delete this
   def friendship_with(profile)
     Friendship.where(buddy_id: id, friend_id: profile.id)
               .or(Friendship.where(buddy_id: profile.id, friend_id: id)).first
   end
 
+  # Friendship Requests for this Profile
   def friend_requests
     friendships.requested
   end

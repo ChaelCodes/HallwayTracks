@@ -1,6 +1,6 @@
 <div class="section">
   <div class="container">
-    <div class="media is-flex-wrap-wrap mb-3" style="row-gap:1em">
+    <div class="media mb-3" style="row-gap:1em">
       <figure class="media-left image">
         <img src="<%= profile_picture(@profile.email) %>" alt="Profile pic">
       </figure>
@@ -8,13 +8,16 @@
         <p class="has-text-weight-bold is-size-4"><%= @profile.name %></p>
         <p class="has-text-weight-semi-bold is-size-6"><%= "@#{@profile.handle}" %></p>
       </div>
-      <div class="media-right">
-        <%= friendship_button(@profile) %>
-      </div>
     </div>
+    <p><%= policy(@profile).show_details? ? @profile.bio : unauthorized_message(@profile) %></p>
     <div class="block">
       <p>
-        <%= policy(@profile).show_details? ? @profile.bio : unauthorized_message(@profile) %>
+        <%= link_to_if @your_friendship, @your_friendship %>
+        <div class="field is-grouped-multiline has-addons">
+          <%= friendship_button(@your_friendship, current_user&.profile) %>
+        </div>
+        <%= link_to_if @their_friendship, @their_friendship %>
+        <%= friendship_button(@their_friendship, current_user&.profile) %>
       </p>
     </div>
   </div>
